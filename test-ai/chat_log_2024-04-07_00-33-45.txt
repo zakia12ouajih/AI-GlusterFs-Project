@@ -1,3 +1,0 @@
-User: hello
-Bot: Hello! :D
-

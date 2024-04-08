@@ -4,15 +4,12 @@ import shutil
 import subprocess
 import re
 import datetime
-import long_responses as long  # Assuming this module exists
-# Uncomment these imports if you plan to use them later
-# from transformers import AutoModelForCausalLM, AutoTokenizer
-# import torch
+import long_responses as long 
+
 
 app = Flask(__name__)
 initialized = False
 current_log_file = None
-# Initialize your model and tokenizer here if needed
 
 
 def message_probability(user_message, recognised_words, single_response=False, required_words=[]):
@@ -66,7 +63,6 @@ def initialize():
    global current_log_file
    global initialized
    if not initialized:
-      # Generate a unique log file name based on the current timestamp
       current_log_file = f"chat_log_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
       initialized = True
 
@@ -95,7 +91,6 @@ def save_chat_file(user_message, bot_response):
     with open(current_log_file, "a") as file:
         file.write(f"user: {user_message}\nBot: {bot_response}\n\n")
     
-    # Use sudo programmatically to copy the file
     subprocess.run(['sudo', 'cp', current_log_file, gluster_mount_point], check=True)
 
 

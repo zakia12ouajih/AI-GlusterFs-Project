@@ -1,0 +1,9 @@
+user: hi
+Bot: Hello!
+
+user: how are you
+Bot: I'm doing fine, and you?
+
+user: i am feeling high
+Bot: ...
+

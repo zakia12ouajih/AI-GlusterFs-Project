@@ -1,0 +1,6 @@
+User: hi
+Bot: Hello!
+
+User: how are you doing
+Bot: I'm doing fine, and you?
+

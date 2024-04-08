@@ -1,0 +1,9 @@
+User: hi
+Bot: Hey! :D
+
+User: how are you
+Bot: I'm good, how are you?
+
+User: hi
+Bot: Hey! :D
+

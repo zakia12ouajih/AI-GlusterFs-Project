@@ -1,0 +1,18 @@
+User: hi
+Bot: Hey! :D
+
+User: do you know i am happy
+Bot: I'm happy too
+
+User: why are you happy
+Bot: I'm not happy.
+
+User: why
+Bot: I'm not sure, but I think it's because he's a big fan of the show.
+
+User: who
+Bot: I think it's a reference to the movie The Big Lebowski.
+
+User: you like it
+Bot: I do!
+

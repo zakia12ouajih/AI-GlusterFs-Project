@@ -1,0 +1,123 @@
+from flask import Flask, render_template, request, jsonify
+# from transformers import AutoModelForCausalLM, AutoTokenizer
+# import torch
+import datetime
+
+# tokenizer = AutoTokenizer.from_pretrained("microsoft/DialoGPT-medium")
+# model = AutoModelForCausalLM.from_pretrained("microsoft/DialoGPT-medium")
+
+# GLUSTERFS_MOUNT_POINT = "/mnt/glusterfs"
+
+# Create a Flask application instance
+app = Flask(__name__)
+
+current_log_file = None
+initialized = False
+
+
+import re
+import long_responses as long
+
+def message_probability(user_message, recognised_words, single_response=False, required_words=[]):
+   message_certainty = 0
+   has_required_words = True
+
+   for word in user_message:
+      if word in recognised_words:
+         message_certainty += 1
+
+   percentage = float(message_certainty) / float(len(recognised_words))
+
+   for word in required_words:
+      if word not in user_message:
+         has_required_words = False
+         break
+
+   if has_required_words or single_response:
+      return int(percentage * 100)
+   else:
+      return 0
+
+def check_all_messages(message):
+   highest_prob_list = {}
+
+   def response(bot_response, list_of_words, single_response=False, required_words=[]):
+      nonlocal highest_prob_list
+      highest_prob_list[bot_response] = message_probability(message, list_of_words, single_response, required_words)
+
+   response('Hello!', ['hello', 'hi', 'hey', 'sup', 'heyo'], single_response=True)
+   response('See you!', ['bye', 'goodbye'], single_response=True)
+   response('I\'m doing fine, and you?', ['how', 'are', 'you', 'doing'], required_words=['how'])
+   response('You\'re welcome!', ['thank', 'thanks'], single_response=True)
+   response('Thank you!', ['i', 'love', 'code', 'palace'], required_words=['code', 'palace'])
+
+   response(long.R_ADVICE, ['give', 'advice'], required_words=['advice'])
+   response(long.R_EATING, ['what', 'you', 'eat'], required_words=['you', 'eat'])
+
+   best_match = max(highest_prob_list, key=highest_prob_list.get)
+   return long.unknown() if highest_prob_list[best_match] < 1 else best_match
+
+def get_response(user_input):
+   split_message = re.split(r'\s+|[,;?!.-]\s*', user_input.lower())
+   response = check_all_messages(split_message)
+   return response
+
+
+
+def initialize():
+   global current_log_file
+   # Generate a unique log file name based on the current timestamp
+   current_log_file = f"chat_log_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
+
+
+# Define a route and a function to handle requests to that route
+@app.route('/')
+def index():
+   global initialized
+   if not initialized:
+      initialize()
+      initialized = True
+   return render_template('chat.html')
+
+
+@app.route('/get', methods={"GET","POST"})
+def chat():
+   msg = request.form["msg"]
+   input = msg
+   response = get_chat_response(msg)
+   save_chat_file(msg, response)
+   return response
+
+
+
+def get_chat_response(text):
+# Let's chat for 5 lines
+   for step in range(5):
+   # encode the new user input, add the eos_token and return a tensor in Pytorch
+      new_user_input_ids = tokenizer.encode(str(text) + tokenizer.eos_token, return_tensors='pt')
+
+      # append the new user input tokens to the chat history
+      bot_input_ids = torch.cat([chat_history_ids, new_user_input_ids], dim=-1) if step > 0 else new_user_input_ids
+
+      # generated a response while limiting the total chat history to 1000 tokens, 
+      chat_history_ids = model.generate(bot_input_ids, max_length=1000, pad_token_id=tokenizer.eos_token_id)
+
+      # pretty print last ouput tokens from bot
+      return tokenizer.decode(chat_history_ids[:, bot_input_ids.shape[-1]:][0], skip_special_tokens=True)
+
+def save_chat_file(user_message, bot_response):
+   log_directory = os.path.join(GLUSTERFS_MOUNT_POINT, "chat_logs")
+   if not os.path.exists(log_directory):
+      os.makedirs(log_directory)
+
+   log_file_path = os.path.join(log_directory, current_log_file)
+   with open(log_file_path, "a") as file:
+      file.write(f"User: {user_message}\nBot: {bot_response}\n\n")
+
+
+   
+
+
+# Run the Flask application
+if __name__ == '__main__':
+   app.run(debug=True)
